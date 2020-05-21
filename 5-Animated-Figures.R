@@ -4,23 +4,21 @@ library(marmap)
 library(scales)
 library(gganimate)
 
+`%notin%` <- Negate(`%in%`)
+
 setwd("~/Projects/San-Diego-IUU/")
 
-aisdat <- read_csv("data/SanDiegoProcessed_2017-09-01_2017-10-01.csv")
-# nrow(dat)    #764,977,824
+aisdat <- read_feather("data/SanDiegoProcessed_2017-09-01_2017-10-01.feather")
 
 lon1 = -120
 lon2 = -114
 lat1 = 28
 lat2 = 35 
 
-# aisdat <- filter(ais, timestamp == "2017-09-02 11:00:00 UTC")
-# aisdat
-# aisdat <- filter(ais, vessel_A_lat <= 34 & vessel_A_lon >= -120)
-
 bat <- getNOAA.bathy(lon1, lon2, lat1, lat2, res = 1, keep = TRUE)
 
 print("Building plot")
+
 
 p1 <- autoplot(bat, geom=c("raster"), coast = TRUE) + 
   scale_fill_gradientn(colours = c("lightsteelblue4", "lightsteelblue2"), 
@@ -28,9 +26,9 @@ p1 <- autoplot(bat, geom=c("raster"), coast = TRUE) +
                          guide = "colorbar",
                        limits = c(-5000, 0)) +
   coord_cartesian(expand = 0)+
-  geom_point(data=filter(aisdat, vessel_A_lat <= 34 & vessel_A_lon >= -120), aes(vessel_A_lon, vessel_A_lat), size=0.5) + 
+  geom_point(data=filter(aisdat, vessel_A_lat <= 34 & vessel_A_lon >= -120), aes(vessel_A_lon, vessel_A_lat), size=0.5) +   
   geom_point(data=NULL, aes(-117.1611, 32.7157), color="white") +    # San Diego Lat/Lon
-  geom_point(data=NULL, aes(-117.2653, 32.9595), color="red") +    # Del Mar Lat/Lon
+  geom_point(data=NULL, aes(-117.2653, 32.9595), color="red") +      # Del Mar Lat/Lon
   geom_point(data=NULL, aes(-118.1937, 33.7701), color="white") +    # Long Beach Lat/Lon
   geom_point(data=NULL, aes(-117.0618, 32.3661), color="white") +    # Rosarito Lat/Lon
   annotate("text", x = -116.8, y = 32.9595, color="red", label="Del Mar") +
@@ -41,11 +39,11 @@ p1 <- autoplot(bat, geom=c("raster"), coast = TRUE) +
   labs(x="Longitude", y="Latitude", title = "{current_frame}") +
   
   transition_manual(frames = timestamp) +
-
+  
   NULL
 
 print("Animating plot")
-ap1 <- animate(p1, nframes = 200)
+ap1 <- animate(p1, nframes = 744)
 
 print("Saving plot")
 anim_save("figures/Sept2017_animation.gif", ap1)
